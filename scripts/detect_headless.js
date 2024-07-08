@@ -99,13 +99,14 @@ function writeMimePrototypeResult(resultBlock, correctPrototypes) {
 // Test for languages
 function testLanguages(resultBlock) {
   let language        = navigator.language;
-  let languagesLength = navigator.languages.length;
+  // FIX for IE 11 where navigator.languages is undefined
+  let languagesLength = navigator.languages ? navigator.languages.length : 0;
 
   writeToBlock(resultBlock, `Detected ${languagesLength} languages and using ${language}`);
   if (!language || languagesLength === 0)
     return HEADLESS;
   return HEADFUL;
-}
+ }
 
 // Test for webdriver (headless browser has this flag true)
 function testWebdriver(resultBlock) {
@@ -313,6 +314,35 @@ tests.forEach(test => {
   generateTableRow(test.name, test.id);
   testBrowser(test.id, test.testFunction, test.resultFunction);
 });
+
+
+async function runTestsAndCollectResults(testsToSkip = []) {
+  let overallResult = [];
+  throwawayBlock = document.createElement("div").appendChild(document.createElement("div"));
+  for (let i = 0; i < tests.length; i++) {
+    if (testsToSkip.includes(tests[i].id)) {
+      console.log('Skipping test:', tests[i].name);
+      continue;
+    }
+
+    result = await tests[i].testFunction(throwawayBlock);
+    
+    let mappedResult;
+    if (result == HEADLESS)
+      mappedResult = "headless";
+    else if (result == HEADFUL)
+      mappedResult = "headful";
+    else
+      mappedResult = "unknown";
+
+    overallResult.push({ name: tests[i].name, result: mappedResult });
+  }
+  return overallResult;
+}
+(async function() {
+ const results = await runTestsAndCollectResults(['time-elapse']);
+ console.log("results:", results);  
+})();
 
 function generateComment(test, result) {
   if (/.*-result/.test(test)) {
