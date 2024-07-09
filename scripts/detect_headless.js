@@ -95,14 +95,21 @@ function writeMimePrototypeResult(resultBlock, correctPrototypes) {
     writeToBlock(resultBlock, `MimeTypeArray or MimeType prototype aren't consistent`);
 }
 
+function isIE11(){
+  return !!window.MSInputMethodContext && !!document.documentMode;
+}
 
 // Test for languages
 function testLanguages(resultBlock) {
   let language        = navigator.language;
   // FIX for IE 11 where navigator.languages is undefined
   let languagesLength = navigator.languages ? navigator.languages.length : 0;
-
   writeToBlock(resultBlock, `Detected ${languagesLength} languages and using ${language}`);
+
+  if (isIE11()) {
+    return HEADFUL;
+  }
+  
   if (!language || languagesLength === 0)
     return HEADLESS;
   return HEADFUL;
