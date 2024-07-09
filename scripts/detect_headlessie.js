@@ -101,6 +101,9 @@ function testMimePrototype(resultBlock) {
 function writeMimePrototypeResult(resultBlock, correctPrototypes) {
   if (correctPrototypes) writeToBlock(resultBlock, "MimeTypeArray and MimeType prototype are consistent");else writeToBlock(resultBlock, "MimeTypeArray or MimeType prototype aren't consistent");
 }
+function isIE11() {
+  return !!window.MSInputMethodContext && !!document.documentMode;
+}
 
 // Test for languages
 function testLanguages(resultBlock) {
@@ -108,6 +111,9 @@ function testLanguages(resultBlock) {
   // FIX for IE 11 where navigator.languages is undefined
   var languagesLength = navigator.languages ? navigator.languages.length : 0;
   writeToBlock(resultBlock, "Detected ".concat(languagesLength, " languages and using ").concat(language));
+  if (isIE11()) {
+    return HEADFUL;
+  }
   if (!language || languagesLength === 0) return HEADLESS;
   return HEADFUL;
 }
@@ -220,9 +226,9 @@ function testImage(resultBlock) {
   image.src = "fake_image.png";
   body.appendChild(image);
   image.onerror = function () {
+    resultBlock.parentElement.classList.remove("undefined");
+    if (image.width === 0 && image.height === 0) resultBlock.parentElement.classList.add("headless");else resultBlock.parentElement.classList.add("headful");
     writeToBlock(resultBlock, "Broken image has width ".concat(image.width, " and height ").concat(image.height));
-    if (image.width === 0 && image.height === 0) return HEADLESS;
-    return HEADFUL;
   };
 }
 
